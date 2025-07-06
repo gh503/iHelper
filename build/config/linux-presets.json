@@ -1,0 +1,141 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 15,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      },
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      }
+    },
+    {
+      "name": "linux-x64-debug",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-debug"
+      }
+    },
+    {
+      "name": "linux-x64-release",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-x64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-release"
+      }
+    },
+    {
+      "name": "linux-x64-minsizerel",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-x64-minsizerel",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-minsizerel"
+      }
+    },
+    {
+      "name": "linux-x64-relwithdebinfo",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-x64-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-relwithdebinfo"
+      }
+    },
+    {
+      "name": "linux-aarch64-debug",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-debug",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+      }
+    },
+    {
+      "name": "linux-aarch64-release",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+      }
+    },
+    {
+      "name": "linux-aarch64-minsizerel",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-minsizerel",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-minsizerel",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+      }
+    },
+    {
+      "name": "linux-aarch64-relwithdebinfo",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-relwithdebinfo",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-linux-x64-debug",
+      "configurePreset": "linux-x64-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "build-linux-x64-release",
+      "configurePreset": "linux-x64-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "build-linux-x64-minsizerel",
+      "configurePreset": "linux-x64-minsizerel",
+      "configuration": "MinSizeRel"
+    },
+    {
+      "name": "build-linux-x64-relwithdebinfo",
+      "configurePreset": "linux-x64-relwithdebinfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "build-linux-aarch64-debug",
+      "configurePreset": "linux-aarch64-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "build-linux-aarch64-release",
+      "configurePreset": "linux-aarch64-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "build-linux-aarch64-minsizerel",
+      "configurePreset": "linux-aarch64-minsizerel",
+      "configuration": "MinSizeRel"
+    },
+    {
+      "name": "build-linux-aarch64-relwithdebinfo",
+      "configurePreset": "linux-aarch64-relwithdebinfo",
+      "configuration": "RelWithDebInfo"
+    }
+  ]
+}

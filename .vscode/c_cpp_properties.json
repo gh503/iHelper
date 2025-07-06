@@ -1,0 +1,124 @@
+{
+    "configurations": [
+        // https://visualstudio.microsoft.com/zh-hans/visual-cpp-build-tools/
+        // clang + windows SDK
+        {
+            "name": "Windows x86",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/include",
+                "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include/**",
+                "C:/Program Files (x86)/Windows Kits/10/Include/**"
+            ],
+            "defines": [
+                "_WIN32",
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/Llvm/bin/clang-cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-clang-x64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/src",
+                    "${workspaceFolder}/src/include",
+                    "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include/**",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            }
+        },
+        {
+            "name": "Windows x64",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/include",
+                "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include/**",
+                "C:/Program Files (x86)/Windows Kits/10/Include/**"
+            ],
+            "defines": [
+                "_WIN32",
+                "_WIN64",
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:/Program Files/clang+llvm-18.1.8-x86_64-pc-windows-msvc/bin/clang-cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-clang-x64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/src",
+                    "${workspaceFolder}/src/include",
+                    "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include/**",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            }
+        },
+        // xcode-select --install
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/include",
+                "/usr/include",
+                "/usr/local/include",
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/**",
+                "/opt/homebrew/include/**"
+            ],
+            "defines": [
+                "__APPLE__",
+                "__MACH__"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "macos-clang-arm64",
+            "macFrameworkPath": [
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ]
+        },
+        // sudo apt-get install build-essential clang libc++-dev libc++abi-dev
+        {
+            "name": "Linux x64",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/include",
+                "/usr/include",
+                "/usr/local/include",
+                "/usr/include/x86_64-linux-gnu/**"
+            ],
+            "defines": [
+                "__linux__"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64"
+        },
+        {
+            "name": "Linux arm64",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/include",
+                "/usr/include",
+                "/usr/local/include",
+                "/usr/include/x86_64-linux-gnu/**"
+            ],
+            "defines": [
+                "__linux__"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-arm64"
+        }
+    ],
+    "version": 4
+}

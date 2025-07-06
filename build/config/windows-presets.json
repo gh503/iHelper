@@ -1,0 +1,138 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 15,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl.exe",
+        "CMAKE_CXX_COMPILER": "clang-cl.exe",
+        "CMAKE_SYSTEM_VERSION": "10.0.19041.0"
+      },
+      "environment": {
+        "CC": "clang-cl.exe",
+        "CXX": "clang-cl.exe"
+      }
+    },
+    {
+      "name": "windows-x64-debug",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x64-debug"
+      }
+    },
+    {
+      "name": "windows-x64-release",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x64-release"
+      }
+    },
+    {
+      "name": "windows-x64-minsizerel",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x64-minsizerel",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x64-minsizerel"
+      }
+    },
+    {
+      "name": "windows-x64-relwithdebinfo",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x64-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x64-relwithdebinfo"
+      }
+    },
+    {
+      "name": "windows-x86-debug",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x86-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x86-debug"
+      }
+    },
+    {
+      "name": "windows-x86-release",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x86-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x86-release"
+      }
+    },
+    {
+      "name": "windows-x86-minsizerel",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x86-minsizerel",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x86-minsizerel"
+      }
+    },
+    {
+      "name": "windows-x86-relwithdebinfo",
+      "inherits": "windows-base",
+      "binaryDir": "${sourceDir}/../build/build/windows-x86-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/windows-x86-relwithdebinfo"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-windows-x64-debug",
+      "configurePreset": "windows-x64-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "build-windows-x64-release",
+      "configurePreset": "windows-x64-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "build-windows-x64-minsizerel",
+      "configurePreset": "windows-x64-minsizerel",
+      "configuration": "MinSizeRel"
+    },
+    {
+      "name": "build-windows-x64-relwithdebinfo",
+      "configurePreset": "windows-x64-relwithdebinfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "build-windows-x86-debug",
+      "configurePreset": "windows-x86-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "build-windows-x86-release",
+      "configurePreset": "windows-x86-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "build-windows-x86-minsizerel",
+      "configurePreset": "windows-x86-minsizerel",
+      "configuration": "MinSizeRel"
+    },
+    {
+      "name": "build-windows-x86-relwithdebinfo",
+      "configurePreset": "windows-x86-relwithdebinfo",
+      "configuration": "RelWithDebInfo"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 15,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "macos-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0"
+      },
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      }
+    },
+    {
+      "name": "macos-universal-debug",
+      "inherits": "macos-base",
+      "binaryDir": "${sourceDir}/../build/build/macos-universal-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-debug"
+      }
+    },
+    {
+      "name": "macos-universal-release",
+      "inherits": "macos-base",
+      "binaryDir": "${sourceDir}/../build/build/macos-universal-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-release"
+      }
+    },
+    {
+      "name": "macos-universal-minsizerel",
+      "inherits": "macos-base",
+      "binaryDir": "${sourceDir}/../build/build/macos-universal-minsizerel",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-minsizerel"
+      }
+    },
+    {
+      "name": "macos-universal-relwithdebinfo",
+      "inherits": "macos-base",
+      "binaryDir": "${sourceDir}/../build/build/macos-universal-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-relwithdebinfo"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-macos-universal-debug",
+      "configurePreset": "macos-universal-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "build-macos-universal-release",
+      "configurePreset": "macos-universal-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "build-macos-universal-minsizerel",
+      "configurePreset": "macos-universal-minsizerel",
+      "configuration": "MinSizeRel"
+    },
+    {
+      "name": "build-macos-universal-relwithdebinfo",
+      "configurePreset": "macos-universal-relwithdebinfo",
+      "configuration": "RelWithDebInfo"
+    }
+  ]
+}
