@@ -23,6 +23,7 @@ if(PLATFORM_WINDOWS)
         src/Windows/ProcessWin.cpp
         src/Windows/Registry.cpp
         src/Windows/SystemInfoWin.cpp
+        src/Windows/ThreadWin.cpp
         src/Windows/WindowsUtils.cpp
     )
 elseif(PLATFORM_MACOS)
@@ -31,6 +32,7 @@ elseif(PLATFORM_MACOS)
         src/MacOS/NetworkMac.cpp
         src/MacOS/ProcessMac.cpp
         src/MacOS/SystemInfoMac.cpp
+        src/MacOS/ThreadMac.cpp
     )
 elseif(PLATFORM_LINUX)
     set(PLATFORM_SOURCES
@@ -38,6 +40,7 @@ elseif(PLATFORM_LINUX)
         src/Linux/NetworkLinux.cpp
         src/Linux/ProcessLinux.cpp
         src/Linux/SystemInfoLinux.cpp
+        src/Linux/ThreadLinux.cpp
     )
 endif()
 
@@ -51,6 +54,7 @@ set(PUBLIC_HEADERS
     include/CorePlatform/Network.h
     include/CorePlatform/Process.h
     include/CorePlatform/SystemInfo.h
+    include/CorePlatform/Thread.h
     include/CorePlatform/Internal/PlatformDetection.h
 )
 if(WIN32)
