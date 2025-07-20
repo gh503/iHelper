@@ -1,0 +1,32 @@
+#pragma once
+#include "CorePlatform/Internal/PlatformDetection.h"
+
+// 动态库导出控制
+#if defined(CP_PLATFORM_WINDOWS)
+    #ifdef @PROJECT_NAME@_EXPORTS
+        #define CORE_PLATFORM_API __declspec(dllexport)
+    #else
+        #define CORE_PLATFORM_API __declspec(dllimport)
+    #endif
+#else
+    #if __GNUC__ >= 4
+        #define CORE_PLATFORM_API __attribute__ ((visibility ("default")))
+    #else
+        #define CORE_PLATFORM_API
+    #endif
+#endif
+
+// 静态库定义
+#if defined(@PROJECT_NAME@_STATIC)
+    #undef CORE_PLATFORM_API
+    #define CORE_PLATFORM_API
+#endif
+
+// 异常处理宏
+#ifdef _MSC_VER
+    #define CORE_PLATFORM_NOEXCEPT
+#else
+    #define CORE_PLATFORM_NOEXCEPT noexcept
+#endif
+
+#endif // CORE_PLATFORM_EXPORT_H

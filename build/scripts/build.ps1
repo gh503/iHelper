@@ -20,7 +20,7 @@ if (-not $ValidBuildTypes.Contains($BuildType)) {
 # 设置路径
 $CurrentPath = Split-Path $PSScriptRoot -Parent
 $ProjectRoot = Split-Path $CurrentPath -Parent
-Write-Host "$ProjectRoot"
+Write-Host "ProjectRoot: $ProjectRoot"
 $Preset = "windows-$Arch-$($BuildType.ToLower())"
 $BuildDir = "$ProjectRoot\build\build\$Preset"
 $TargetsDir = "$ProjectRoot\targets\$Preset"
@@ -29,7 +29,7 @@ Write-Host "[iHelper] Building for Windows $Arch $BuildType with Clang..."
 Write-Host "Using preset: $Preset"
 
 # 配置项目
-Set-Location "$ProjectRoot\src"
+Set-Location "$ProjectRoot"
 Write-Host "Configuring project..."
 cmake --preset $Preset
 

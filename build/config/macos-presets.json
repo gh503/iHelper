@@ -22,37 +22,37 @@
     {
       "name": "macos-universal-debug",
       "inherits": "macos-base",
-      "binaryDir": "${sourceDir}/../build/build/macos-universal-debug",
+      "binaryDir": "${sourceDir}/build/build/macos-universal-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-debug"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/macos-universal-debug"
       }
     },
     {
       "name": "macos-universal-release",
       "inherits": "macos-base",
-      "binaryDir": "${sourceDir}/../build/build/macos-universal-release",
+      "binaryDir": "${sourceDir}/build/build/macos-universal-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-release"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/macos-universal-release"
       }
     },
     {
       "name": "macos-universal-minsizerel",
       "inherits": "macos-base",
-      "binaryDir": "${sourceDir}/../build/build/macos-universal-minsizerel",
+      "binaryDir": "${sourceDir}/build/build/macos-universal-minsizerel",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-minsizerel"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/macos-universal-minsizerel"
       }
     },
     {
       "name": "macos-universal-relwithdebinfo",
       "inherits": "macos-base",
-      "binaryDir": "${sourceDir}/../build/build/macos-universal-relwithdebinfo",
+      "binaryDir": "${sourceDir}/build/build/macos-universal-relwithdebinfo",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/macos-universal-relwithdebinfo"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/macos-universal-relwithdebinfo"
       }
     }
   ],

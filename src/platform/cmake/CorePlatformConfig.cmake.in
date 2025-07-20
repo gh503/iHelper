@@ -1,0 +1,46 @@
+# cmake/CorePlatformConfig.cmake.in
+@PACKAGE_INIT@
+
+# 包含目标文件
+include(CMakeFindDependencyMacro)
+
+# 检查平台
+if(WIN32)
+    find_dependency(WindowsSDK)
+elseif(APPLE)
+    find_dependency(CoreFoundation)
+    find_dependency(IOKit)
+    find_dependency(SystemConfiguration)
+else()
+    find_dependency(Threads)
+endif()
+
+# 包含导出的目标文件
+include("${CMAKE_CURRENT_LIST_DIR}/CorePlatformTargets.cmake")
+
+# 验证所有组件是否可用
+check_required_components(CorePlatform)
+
+# 设置版本变量
+set(CorePlatform_VERSION_MAJOR @CorePlatform_VERSION_MAJOR@)
+set(CorePlatform_VERSION_MINOR @CorePlatform_VERSION_MINOR@)
+set(CorePlatform_VERSION_PATCH @CorePlatform_VERSION_PATCH@)
+set(CorePlatform_VERSION "@CorePlatform_VERSION_MAJOR@.@CorePlatform_VERSION_MINOR@.@CorePlatform_VERSION_PATCH@")
+
+# 设置包含目录变量
+set(CorePlatform_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@/CorePlatform")
+
+# 提供宏或函数供用户使用
+macro(coreplatform_enable_feature FEATURE_NAME)
+    target_compile_definitions(CorePlatform::CorePlatform INTERFACE -DCOREPLATFORM_ENABLE_${FEATURE_NAME})
+    message(STATUS "Enabled feature: ${FEATURE_NAME}")
+endmacro()
+
+# 提供查找函数
+function(coreplatform_check_version REQUIRED_VERSION)
+    if(CorePlatform_VERSION VERSION_LESS REQUIRED_VERSION)
+        message(FATAL_ERROR "CorePlatform version ${REQUIRED_VERSION} or higher is required. Found ${CorePlatform_VERSION}")
+    else()
+        message(STATUS "CorePlatform version ${CorePlatform_VERSION} satisfies requirement (>= ${REQUIRED_VERSION})")
+    endif()
+endfunction()

@@ -22,77 +22,77 @@
     {
       "name": "linux-x64-debug",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-x64-debug",
+      "binaryDir": "${sourceDir}/build/build/linux-x64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-debug"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-x64-debug"
       }
     },
     {
       "name": "linux-x64-release",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-x64-release",
+      "binaryDir": "${sourceDir}/build/build/linux-x64-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-release"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-x64-release"
       }
     },
     {
       "name": "linux-x64-minsizerel",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-x64-minsizerel",
+      "binaryDir": "${sourceDir}/build/build/linux-x64-minsizerel",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-minsizerel"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-x64-minsizerel"
       }
     },
     {
       "name": "linux-x64-relwithdebinfo",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-x64-relwithdebinfo",
+      "binaryDir": "${sourceDir}/build/build/linux-x64-relwithdebinfo",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-x64-relwithdebinfo"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-x64-relwithdebinfo"
       }
     },
     {
       "name": "linux-aarch64-debug",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-debug",
+      "binaryDir": "${sourceDir}/build/build/linux-aarch64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-debug",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-aarch64-debug",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/cmake/toolchains/aarch64-linux-gnu.cmake"
       }
     },
     {
       "name": "linux-aarch64-release",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-release",
+      "binaryDir": "${sourceDir}/build/build/linux-aarch64-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-release",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-aarch64-release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/cmake/toolchains/aarch64-linux-gnu.cmake"
       }
     },
     {
       "name": "linux-aarch64-minsizerel",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-minsizerel",
+      "binaryDir": "${sourceDir}/build/build/linux-aarch64-minsizerel",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-minsizerel",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-aarch64-minsizerel",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/cmake/toolchains/aarch64-linux-gnu.cmake"
       }
     },
     {
       "name": "linux-aarch64-relwithdebinfo",
       "inherits": "linux-base",
-      "binaryDir": "${sourceDir}/../build/build/linux-aarch64-relwithdebinfo",
+      "binaryDir": "${sourceDir}/build/build/linux-aarch64-relwithdebinfo",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/../targets/linux-aarch64-relwithdebinfo",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../build/cmake/toolchains/aarch64-linux-gnu.cmake"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/targets/linux-aarch64-relwithdebinfo",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/cmake/toolchains/aarch64-linux-gnu.cmake"
       }
     }
   ],

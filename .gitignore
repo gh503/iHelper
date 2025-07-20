@@ -1,2 +1,2 @@
-build/build/
-target/
+./build/build/
+./targets/
