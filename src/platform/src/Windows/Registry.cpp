@@ -47,6 +47,12 @@ REGSAM ViewToSamFlags(Registry::RegistryView view) {
             return KEY_WOW64_64KEY;
         case Registry::RegistryView::Default:
         default:
+            // 对于 HKEY_CURRENT_USER，默认应添加视图标志
+            #ifdef _WIN64
+                return KEY_WOW64_64KEY; // 64位应用默认
+            #else
+                return KEY_WOW64_32KEY; // 32位应用默认
+            #endif
             return 0;
     }
 }

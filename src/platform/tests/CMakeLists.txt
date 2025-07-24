@@ -15,7 +15,7 @@ FetchContent_Declare(
 # 可选：设置 GTest 编译选项
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  # Windows 下解决 CRT 冲突
 option(INSTALL_GTEST "Install Googletest" OFF)
-option(BUILD_GMOCK "Build Google Mock" OFF)
+option(BUILD_GMOCK "Build Google Mock" ON)
 
 # 下载并配置 GTest
 FetchContent_MakeAvailable(googletest)
@@ -71,6 +71,7 @@ target_include_directories(CorePlatformTests PUBLIC
 target_link_libraries(CorePlatformTests PRIVATE
     CorePlatform_static
     gtest_main
+    gmock
 )
 
 # 添加测试

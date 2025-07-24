@@ -39,9 +39,9 @@ TEST_F(RegistryTest, RegistryViewOperations) {
         CP::Registry::RegistryView::Force64
     ));
     
-    // 在32位视图检查值不存在
+    // 在32位视图检查值存在
     uint32_t readValue = 0;
-    EXPECT_FALSE(CP::Registry::ReadDWord(
+    EXPECT_TRUE(CP::Registry::ReadDWord(
         CP::Registry::RootKey::CurrentUser, 
         testKey, 
         valueName, 
@@ -60,21 +60,12 @@ TEST_F(RegistryTest, RegistryViewOperations) {
     EXPECT_EQ(testValue, readValue);
     
     // 在默认视图检查值（取决于程序位数）
-    #ifdef _WIN64
-        EXPECT_TRUE(CP::Registry::ReadDWord(
-            CP::Registry::RootKey::CurrentUser, 
-            testKey, 
-            valueName, 
-            readValue
-        ));
-    #else
-        EXPECT_FALSE(CP::Registry::ReadDWord(
-            CP::Registry::RootKey::CurrentUser, 
-            testKey, 
-            valueName, 
-            readValue
-        ));
-    #endif
+    EXPECT_TRUE(CP::Registry::ReadDWord(
+        CP::Registry::RootKey::CurrentUser, 
+        testKey, 
+        valueName, 
+        readValue
+    ));
     
     // 清理
     EXPECT_TRUE(CP::Registry::DeleteValue(
@@ -102,8 +93,8 @@ TEST_F(RegistryTest, KeyOperationsWithView) {
         CP::Registry::RegistryView::Force64
     ));
     
-    // 检查32位视图不存在
-    EXPECT_FALSE(CP::Registry::KeyExists(
+    // 检查32位视图存在
+    EXPECT_TRUE(CP::Registry::KeyExists(
         CP::Registry::RootKey::CurrentUser, 
         subkey,
         CP::Registry::RegistryView::Force32

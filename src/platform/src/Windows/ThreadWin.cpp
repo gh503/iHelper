@@ -209,8 +209,7 @@ void Thread::SetCurrentThreadName(const std::string& name) {
         // 使用类型别名消除转换警告
         using SetThreadDescriptionFunc = HRESULT(WINAPI*)(HANDLE, PCWSTR);
         
-        auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(
-            GetProcAddress(kernel32, "SetThreadDescription"));
+        auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(reinterpret_cast<void*>(GetProcAddress(kernel32, "SetThreadDescription")));
         
         if (setThreadDescription) {
             // 转换UTF-8到宽字符

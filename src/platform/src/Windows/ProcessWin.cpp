@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <TlHelp32.h>
+#include <iostream>
 
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "advapi32.lib")
@@ -141,7 +142,8 @@ public:
         SetHandleInformation(m_stderrRead, HANDLE_FLAG_INHERIT, 0);
 
         // Prepare STARTUPINFO
-        STARTUPINFOW si = { sizeof(si) };
+        STARTUPINFOW si = {};
+        si.cb = sizeof(si);
         si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
         si.wShowWindow = SW_HIDE;
         si.hStdInput = stdinRead;
@@ -192,15 +194,38 @@ public:
     }
 
     bool WaitForFinished(int timeoutMs) {
-        if (m_process == INVALID_HANDLE_VALUE) return true;
-        DWORD result = WaitForSingleObject(m_process, timeoutMs == -1 ? INFINITE : timeoutMs);
-        if (result == WAIT_OBJECT_0) {
-            DWORD exitCode;
-            GetExitCodeProcess(m_process, &exitCode);
-            m_exitCode = exitCode;
-            return true;
+        if (m_process == INVALID_HANDLE_VALUE) {
+            return true;  // 无有效进程
         }
-        return false;
+
+        DWORD waitTime = (timeoutMs == -1) ? INFINITE : static_cast<DWORD>(timeoutMs);
+        DWORD result = WaitForSingleObject(m_process, waitTime);
+
+        switch (result) {
+            case WAIT_OBJECT_0: {  // 进程已退出
+                DWORD exitCode;
+                if (!GetExitCodeProcess(m_process, &exitCode)) {
+                    // 获取退出码失败
+                    exitCode = (DWORD)-1; 
+                }
+                m_exitCode = exitCode;
+
+                CloseHandle(m_process);  // 必须关闭句柄
+                m_process = INVALID_HANDLE_VALUE;
+                return true;
+            }
+
+            case WAIT_TIMEOUT:  // 超时
+                return false;
+
+            case WAIT_FAILED:   // 错误情况
+            default: {
+                DWORD error = GetLastError();
+                // 实际项目中应记录错误日志:
+                // std::cerr << "Wait failed: 0x" << std::hex << error << std::dec;
+                return false;
+            }
+        }
     }
 
     void Terminate(bool force) {

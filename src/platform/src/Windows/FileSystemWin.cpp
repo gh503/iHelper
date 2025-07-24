@@ -464,7 +464,15 @@ std::string FileSystem::GetTempDirectory() {
     if (result == 0 || result > MAX_PATH) {
         return "";
     }
-    return WindowsUtils::WideToUTF8(buffer);
+    std::string tempPath = WindowsUtils::WideToUTF8(buffer);
+    // 移除tempBase末尾可能的分隔符
+    if (!tempPath.empty()) {
+        char lastChar = tempPath.back();
+        if (lastChar == '\\' || lastChar == '/') {
+            tempPath.pop_back();
+        }
+    }
+    return tempPath;
 }
 
 std::string FileSystem::GetExecutablePath() {

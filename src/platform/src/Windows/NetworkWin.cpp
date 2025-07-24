@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include "CorePlatform/Windows/WindowsUtils.h"
+#include <iostream>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
@@ -149,6 +150,7 @@ CPSocket& CPSocket::operator=(CPSocket&& other) noexcept {
 }
 
 bool CPSocket::Connect(const IPAddress& address, uint16_t port, Type type) {
+    if (!address.IsValid()) { return false; }
     pImpl->Disconnect();
     pImpl->sockType = type;
 
@@ -318,6 +320,7 @@ std::vector<IPAddress> Network::ResolveHostName(const std::string& hostname) {
         WSADATA wsaData;
         return (WSAStartup(MAKEWORD(2, 2), &wsaData)) == 0;
     }();
+    (void)wsaInitialized; // 显式忽略变量，消除警告
     
     struct addrinfo hints = {};
     struct addrinfo* res = nullptr;
@@ -369,43 +372,92 @@ std::vector<IPAddress> Network::ResolveHostName(const std::string& hostname) {
 bool Network::Ping(const IPAddress& address, int timeoutMs) {
     if (!address.IsValid()) return false;
 
-    HANDLE hIcmp = IcmpCreateFile();
-    if (hIcmp == INVALID_HANDLE_VALUE) return false;
+    // 创建正确的 ICMP 句柄
+    HANDLE hIcmp = (address.GetType() == IPAddress::Type::IPv4) 
+        ? IcmpCreateFile() 
+        : Icmp6CreateFile();
+    
+    if (hIcmp == INVALID_HANDLE_VALUE) {
+        DWORD error = GetLastError();
+        std::cerr << "ICMP handle creation failed, error: " << error << std::endl;
+        return false;
+    }
 
     auto cleanup = [&]() { IcmpCloseHandle(hIcmp); };
 
-    char sendData[32] = "PingData";
-    constexpr DWORD REPLY_BUFFER_SIZE = sizeof(ICMP_ECHO_REPLY) + 32;
-    char replyBuffer[REPLY_BUFFER_SIZE];
+    const char sendData[32] = "PingData";
     
     if (address.GetType() == IPAddress::Type::IPv4) {
+        // IPv4 部分保持不变
+        constexpr DWORD REPLY_BUFFER_SIZE = sizeof(ICMP_ECHO_REPLY) + sizeof(sendData);
+        BYTE replyBuffer[REPLY_BUFFER_SIZE];
+        
         in_addr target;
         target.s_addr = htonl(address.ToIPv4());
-        DWORD reply = IcmpSendEcho(hIcmp, target.s_addr, sendData, sizeof(sendData), 
-                                  nullptr, replyBuffer, REPLY_BUFFER_SIZE, timeoutMs);
+        
+        DWORD reply = IcmpSendEcho(
+            hIcmp, 
+            target.s_addr, 
+            const_cast<char*>(sendData), 
+            static_cast<WORD>(sizeof(sendData)),
+            nullptr, 
+            replyBuffer, 
+            REPLY_BUFFER_SIZE, 
+            timeoutMs
+        );
+        
         cleanup();
         return reply > 0;
     } 
     else if (address.GetType() == IPAddress::Type::IPv6) {
-        sockaddr_in6 target = {};
-        target.sin6_family = AF_INET6;
-        auto ipv6 = address.ToIPv6();
-        memcpy(&target.sin6_addr, ipv6.data(), 16);
+        constexpr DWORD REPLY_BUFFER_SIZE = sizeof(ICMPV6_ECHO_REPLY) + sizeof(sendData) + 8;
+        std::vector<BYTE> replyBuffer(REPLY_BUFFER_SIZE);
         
+        SOCKADDR_IN6 targetAddr = {};
+        targetAddr.sin6_family = AF_INET6;
+        
+        auto ipv6 = address.ToIPv6();
+        memcpy(&targetAddr.sin6_addr, ipv6.data(), sizeof(targetAddr.sin6_addr));
+        
+        // 2. 正确处理作用域 ID
+        const bool isLocalhost = (memcmp(ipv6.data(), 
+            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1", 16) == 0);
+        
+        // 对于 localhost 使用作用域 ID 0
+        targetAddr.sin6_scope_id = isLocalhost ? 0 : 1;
+        
+        // 3. 创建有效的源地址结构
+        SOCKADDR_IN6 sourceAddr = {};
+        sourceAddr.sin6_family = AF_INET6;
+        sourceAddr.sin6_addr = in6addr_any; // 使用任意地址
+        
+        IP_OPTION_INFORMATION requestOptions = {};
+        requestOptions.Ttl = 128;
+        
+        // 4. 使用有效的源地址
         DWORD reply = Icmp6SendEcho2(
-            hIcmp, 
+            hIcmp,
             nullptr,    // Event
             nullptr,    // ApcRoutine
             nullptr,    // ApcContext
-            nullptr,    // SourceAddress (optional)
-            &target,    // DestinationAddress
-            sendData, 
+            &sourceAddr, // 使用有效的源地址
+            &targetAddr, // 目标地址
+            const_cast<char*>(sendData),
             static_cast<WORD>(sizeof(sendData)),
-            nullptr,    // RequestOptions
-            replyBuffer,
+            &requestOptions,
+            replyBuffer.data(),
             REPLY_BUFFER_SIZE,
             static_cast<DWORD>(timeoutMs)
         );
+        
+        if (reply == 0) {
+            DWORD error = GetLastError();
+            std::cerr << "Icmp6SendEcho2 failed with error: " << error << std::endl;
+            
+            if (error == IP_REQ_TIMED_OUT) {
+                std::cerr << "Request timed out" << std::endl;
+            }
+        }
         
         cleanup();
         return reply > 0;

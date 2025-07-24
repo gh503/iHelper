@@ -143,6 +143,7 @@ CPSocket& CPSocket::operator=(CPSocket&& other) noexcept {
 }
 
 bool CPSocket::Connect(const IPAddress& address, uint16_t port, Type type) {
+    if (!address.IsValid()) { return false; }
     pImpl->Disconnect();
     pImpl->sockType = type;
 
@@ -358,93 +359,127 @@ std::vector<IPAddress> Network::ResolveHostName(const std::string& hostname) {
 bool Network::Ping(const IPAddress& address, int timeoutMs) {
     if (!address.IsValid()) return false;
 
-    int sock = (address.GetType() == IPAddress::Type::IPv4) ? 
-        socket(AF_INET, SOCK_RAW, IPPROTO_ICMP) : 
-        socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+    // 创建正确的 ICMP 句柄
+    HANDLE hIcmp = (address.GetType() == IPAddress::Type::IPv4) 
+        ? IcmpCreateFile() 
+        : Icmp6CreateFile();
     
-    if (sock < 0) return false;
-
-    // 设置超时
-    struct timeval tv = {
-        .tv_sec = timeoutMs / 1000,
-        .tv_usec = (timeoutMs % 1000) * 1000
-    };
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-    bool success = false;
-    if (address.GetType() == IPAddress::Type::IPv4) {
-        sockaddr_in dest = {};
-        dest.sin_family = AF_INET;
-        dest.sin_addr.s_addr = htonl(address.ToIPv4());
-        
-        struct icmphdr packet;
-        memset(&packet, 0, sizeof(packet));
-        packet.type = ICMP_ECHO;
-        packet.un.echo.id = getpid() & 0xFFFF;
-        packet.un.echo.sequence = 1;
-        packet.checksum = 0;
-        
-        // 计算校验和
-        uint16_t* data = reinterpret_cast<uint16_t*>(&packet);
-        size_t len = sizeof(packet);
-        uint32_t sum = 0;
-        while (len > 1) {
-            sum += *data++;
-            len -= 2;
-        }
-        if (len > 0) sum += *(uint8_t*)data;
-        sum = (sum >> 16) + (sum & 0xFFFF);
-        sum += (sum >> 16);
-        packet.checksum = static_cast<uint16_t>(~sum);
-        
-        // 发送请求
-        if (sendto(sock, &packet, sizeof(packet), 0, 
-                  reinterpret_cast<sockaddr*>(&dest), sizeof(dest)) <= 0) {
-            close(sock);
-            return false;
-        }
-        
-        // 接收响应
-        char recvBuf[128];
-        struct sockaddr_in from;
-        socklen_t fromLen = sizeof(from);
-        if (recvfrom(sock, recvBuf, sizeof(recvBuf), 0, 
-                    reinterpret_cast<sockaddr*>(&from), &fromLen) > 0) {
-            success = true;
-        }
-    } 
-    else if (address.GetType() == IPAddress::Type::IPv6) {
-        sockaddr_in6 dest = {};
-        dest.sin6_family = AF_INET6;
-        auto ipv6 = address.ToIPv6();
-        memcpy(&dest.sin6_addr, ipv6.data(), 16);
-        
-        struct icmp6_hdr packet;
-        memset(&packet, 0, sizeof(packet));
-        packet.icmp6_type = ICMP6_ECHO_REQUEST;
-        packet.icmp6_code = 0;
-        packet.icmp6_id = getpid() & 0xFFFF;
-        packet.icmp6_seq = 1;
-        
-        // 发送请求
-        if (sendto(sock, &packet, sizeof(packet), 0, 
-                  reinterpret_cast<sockaddr*>(&dest), sizeof(dest)) <= 0) {
-            close(sock);
-            return false;
-        }
-        
-        // 接收响应
-        char recvBuf[128];
-        struct sockaddr_in6 from;
-        socklen_t fromLen = sizeof(from);
-        if (recvfrom(sock, recvBuf, sizeof(recvBuf), 0, 
-                    reinterpret_cast<sockaddr*>(&from), &fromLen) > 0) {
-            success = true;
-        }
+    if (hIcmp == INVALID_HANDLE_VALUE) {
+        DWORD error = GetLastError();
+        // 记录错误日志: Logger::Error("ICMP 句柄创建失败，错误代码: {}", error);
+        return false;
     }
 
-    close(sock);
-    return success;
+    auto cleanup = [&]() { IcmpCloseHandle(hIcmp); };
+
+    const char sendData[32] = "PingData";
+    constexpr DWORD REPLY_BUFFER_SIZE = sizeof(ICMP_ECHO_REPLY) + sizeof(sendData);
+    BYTE replyBuffer[REPLY_BUFFER_SIZE];
+    
+    if (address.GetType() == IPAddress::Type::IPv4) {
+        // IPv4 部分保持不变
+        in_addr target;
+        target.s_addr = htonl(address.ToIPv4());
+        
+        DWORD reply = IcmpSendEcho(
+            hIcmp, 
+            target.s_addr, 
+            const_cast<char*>(sendData), 
+            static_cast<WORD>(sizeof(sendData)),
+            nullptr, 
+            replyBuffer, 
+            REPLY_BUFFER_SIZE, 
+            timeoutMs
+        );
+        
+        cleanup();
+        return reply > 0;
+    } 
+    else if (address.GetType() == IPAddress::Type::IPv6) {
+        // 准备目标地址
+        sockaddr_in6 target;
+        memset(&target, 0, sizeof(target));
+        target.sin6_family = AF_INET6;
+        auto ipv6 = address.ToIPv6();
+        memcpy(&target.sin6_addr, ipv6.data(), sizeof(target.sin6_addr));
+        
+        // 准备源地址（对于本地回环特别处理）
+        sockaddr_in6 source;
+        memset(&source, 0, sizeof(source));
+        source.sin6_family = AF_INET6;
+        
+        // 检查是否是本地回环地址
+        const bool isLocalhost = (address == IPAddress::Localhost(IPAddress::Type::IPv6));
+        if (isLocalhost) {
+            // 设置源地址为 ::1
+            source.sin6_addr.u.Byte[15] = 1;
+        }
+        
+        // 获取本地适配器地址作为源地址（非本地回环时）
+        if (!isLocalhost) {
+            PIP_ADAPTER_ADDRESSES pAddresses = nullptr;
+            ULONG outBufLen = 0;
+            DWORD dwRetVal = 0;
+            
+            // 获取适配器信息
+            if (GetAdaptersAddresses(AF_INET6, 0, nullptr, nullptr, &outBufLen) == ERROR_BUFFER_OVERFLOW) {
+                pAddresses = (PIP_ADAPTER_ADDRESSES)malloc(outBufLen);
+                if (pAddresses) {
+                    dwRetVal = GetAdaptersAddresses(AF_INET6, 0, nullptr, pAddresses, &outBufLen);
+                    if (dwRetVal == ERROR_SUCCESS) {
+                        // 使用第一个 IPv6 适配器的地址作为源地址
+                        PIP_ADAPTER_ADDRESSES pCurrAddresses = pAddresses;
+                        while (pCurrAddresses) {
+                            if (pCurrAddresses->OperStatus == IfOperStatusUp) {
+                                PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pCurrAddresses->FirstUnicastAddress;
+                                if (pUnicast) {
+                                    sockaddr_in6* pAddr = reinterpret_cast<sockaddr_in6*>(pUnicast->Address.lpSockaddr);
+                                    if (pAddr->sin6_family == AF_INET6) {
+                                        memcpy(&source.sin6_addr, &pAddr->sin6_addr, sizeof(source.sin6_addr));
+                                        break;
+                                    }
+                                }
+                            }
+                            pCurrAddresses = pCurrAddresses->Next;
+                        }
+                    }
+                    free(pAddresses);
+                }
+            }
+        }
+        
+        // 调用 IPv6 Ping
+        DWORD reply = Icmp6SendEcho2(
+            hIcmp, 
+            nullptr,    // Event
+            nullptr,    // ApcRoutine
+            nullptr,    // ApcContext
+            isLocalhost ? (sockaddr_in6*)&source : nullptr, // 源地址
+            (sockaddr_in6*)&target, // 目标地址
+            const_cast<char*>(sendData), 
+            static_cast<WORD>(sizeof(sendData)), 
+            nullptr,    // RequestOptions
+            replyBuffer,
+            REPLY_BUFFER_SIZE,
+            static_cast<DWORD>(timeoutMs)
+        );
+        
+        if (reply == 0) {
+            DWORD error = GetLastError();
+            // 记录错误日志: Logger::Error("ICMPv6 Ping 失败，错误代码: {}", error);
+            
+            // 常见错误处理
+            if (error == ERROR_ACCESS_DENIED) {
+                // 记录日志: Logger::Error("需要管理员权限执行 Ping 操作");
+            }
+        }
+        
+        cleanup();
+        return reply > 0;
+    }
+
+    cleanup();
+    return false;
 }
 
 } // namespace CorePlatform

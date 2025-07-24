@@ -143,6 +143,7 @@ CPSocket& CPSocket::operator=(CPSocket&& other) noexcept {
 }
 
 bool CPSocket::Connect(const IPAddress& address, uint16_t port, Type type) {
+    if (!address.IsValid()) { return false; }
     pImpl->Disconnect();
     pImpl->sockType = type;
 

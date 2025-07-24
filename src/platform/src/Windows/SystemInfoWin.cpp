@@ -14,6 +14,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 #pragma comment(lib, "pdh.lib")
 #pragma comment(lib, "advapi32.lib")
@@ -63,7 +64,15 @@ static std::wstring GetRegistryString(HKEY hKey, const wchar_t* subKey, const wc
 SystemVersion SystemInfo::GetOSVersion() {
     SystemVersion version;
     
-    // 使用系统API获取版本信息，避免注册表重定向问题
+    // 优先从注册表获取详细操作系统名称
+    std::wstring productName = GetRegistryString(
+        HKEY_LOCAL_MACHINE, 
+        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 
+        L"ProductName"
+    );
+    version.name = WindowsUtils::WideToUTF8(productName);
+    
+    // 使用API获取版本号信息
     OSVERSIONINFOEXW osvi;
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
     memset(&osvi, 0, sizeof(osvi));
@@ -72,49 +81,24 @@ SystemVersion SystemInfo::GetOSVersion() {
     *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion");
     
     if (RtlGetVersion && RtlGetVersion(&osvi) == 0) {
+        // 构建完整版本号字符串
         std::ostringstream ss;
         ss << osvi.dwMajorVersion << "." << osvi.dwMinorVersion << "." << osvi.dwBuildNumber;
         version.version = ss.str();
         
-        // 根据版本号确定操作系统名称
-        if (osvi.dwMajorVersion == 10) {
-            if (osvi.wProductType == VER_NT_WORKSTATION) {
-                version.name = "Windows 10";
-            } else {
-                version.name = "Windows Server 2016/2019";
-            }
-        } else if (osvi.dwMajorVersion == 6) {
-            if (osvi.dwMinorVersion == 3) {
-                version.name = osvi.wProductType == VER_NT_WORKSTATION ? "Windows 8.1" : "Windows Server 2012 R2";
-            } else if (osvi.dwMinorVersion == 2) {
-                version.name = osvi.wProductType == VER_NT_WORKSTATION ? "Windows 8" : "Windows Server 2012";
-            } else if (osvi.dwMinorVersion == 1) {
-                version.name = osvi.wProductType == VER_NT_WORKSTATION ? "Windows 7" : "Windows Server 2008 R2";
-            } else if (osvi.dwMinorVersion == 0) {
-                version.name = osvi.wProductType == VER_NT_WORKSTATION ? "Windows Vista" : "Windows Server 2008";
-            }
-        } else if (osvi.dwMajorVersion == 5) {
-            if (osvi.dwMinorVersion == 2) {
-                version.name = "Windows Server 2003";
-            } else if (osvi.dwMinorVersion == 1) {
-                version.name = "Windows XP";
-            } else if (osvi.dwMinorVersion == 0) {
-                version.name = "Windows 2000";
+        // 特殊处理：识别Windows 11
+        if (osvi.dwMajorVersion == 10 && osvi.dwBuildNumber >= 22000) {
+            // 保留注册表名称，但如果是"Windows 10"则升级显示
+            if (version.name.find("Windows 10") != std::string::npos) {
+                version.name = "Windows 11" + version.name.substr(10);
             }
         }
+    } else {
+        // API失败时的备选方案
+        version.version = "0.0.0";
     }
     
-    // 如果无法通过API获取名称，尝试注册表（使用处理重定向的函数）
-    if (version.name.empty()) {
-        std::wstring productName = GetRegistryString(
-            HKEY_LOCAL_MACHINE, 
-            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 
-            L"ProductName"
-        );
-        version.name = WindowsUtils::WideToUTF8(productName);
-    }
-    
-    // 获取构建号（使用处理重定向的函数）
+    // 获取构建号（直接从注册表获取）
     std::wstring buildNumber = GetRegistryString(
         HKEY_LOCAL_MACHINE, 
         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 
@@ -122,7 +106,7 @@ SystemVersion SystemInfo::GetOSVersion() {
     );
     version.build = WindowsUtils::WideToUTF8(buildNumber);
     
-    // 获取系统架构
+    // 获取系统架构（保持不变）
     SYSTEM_INFO sysInfo;
     GetNativeSystemInfo(&sysInfo);
     switch (sysInfo.wProcessorArchitecture) {
@@ -161,7 +145,7 @@ MemoryInfo SystemInfo::GetMemoryInfo() {
 }
 
 CPUInfo SystemInfo::GetCPUInfo() {
-    CPUInfo info = {0, 0, 0, 0, 0.0};
+    CPUInfo info = {"", "", 0, 0, 0.0};
     
     int cpuInfo[4] = {-1};
     char vendor[13] = {0};
