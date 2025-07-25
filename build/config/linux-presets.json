@@ -10,10 +10,6 @@
       "name": "linux-base",
       "hidden": true,
       "generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-      },
       "environment": {
         "CC": "clang",
         "CXX": "clang++"

@@ -5,6 +5,7 @@
         "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/targets"
     },
     "cmake.configureOnOpen": true,
+    "cmake.configureOnEdit": false,
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
         "*.h": "cpp",
@@ -90,7 +91,11 @@
         "any": "cpp",
         "set": "cpp",
         "unordered_set": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "*.in": "cpp",
+        "coroutine": "cpp",
+        "resumable": "cpp",
+        "future": "cpp"
     },
     "cmake.generator": "Ninja",
     "terminal.integrated.profiles.windows": {

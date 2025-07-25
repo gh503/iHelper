@@ -10,11 +10,6 @@
       "name": "windows-base",
       "hidden": true,
       "generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-cl.exe",
-        "CMAKE_CXX_COMPILER": "clang-cl.exe",
-        "CMAKE_SYSTEM_VERSION": "10.0.19041.0"
-      },
       "environment": {
         "CC": "clang-cl.exe",
         "CXX": "clang-cl.exe"

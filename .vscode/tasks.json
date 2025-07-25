@@ -19,30 +19,43 @@
             "type": "shell",
             "command": "powershell",
             "args": [
-                "-ExecutionPolicy", "Bypass",
-                "-File", "${workspaceFolder}/build/scripts/build.ps1",
-                "-Platform", "windows",
-                "-Arch", "x64",
-                "-BuildType", "${input:buildType}"
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/build/scripts/build.ps1",
+                "-Platform",
+                "windows",
+                "-Arch",
+                "x64",
+                "-BuildType",
+                "${input:buildType}"
             ],
             "group": "build",
-            "problemMatcher": ["$msCompile"]
+            "problemMatcher": [
+                "$msCompile"
+            ]
         },
         {
             "label": "Build Windows x86",
             "type": "shell",
             "command": "powershell",
             "args": [
-                "-ExecutionPolicy", "Bypass",
-                "-File", "${workspaceFolder}/build/scripts/build.ps1",
-                "-Platform", "windows",
-                "-Arch", "x86",
-                "-BuildType", "${input:buildType}"
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/build/scripts/build.ps1",
+                "-Platform",
+                "windows",
+                "-Arch",
+                "x86",
+                "-BuildType",
+                "${input:buildType}"
             ],
             "group": "build",
-            "problemMatcher": ["$msCompile"]
+            "problemMatcher": [
+                "$msCompile"
+            ]
         },
-        
         {
             "label": "Build macOS Universal",
             "type": "shell",
@@ -52,9 +65,10 @@
                 "--build-type=${input:buildType}"
             ],
             "group": "build",
-            "problemMatcher": ["$clang"]
+            "problemMatcher": [
+                "$clang"
+            ]
         },
-        
         {
             "label": "Build Linux x64",
             "type": "shell",
@@ -65,7 +79,9 @@
                 "--build-type=${input:buildType}"
             ],
             "group": "build",
-            "problemMatcher": ["$clang"]
+            "problemMatcher": [
+                "$clang"
+            ]
         },
         {
             "label": "Build Linux aarch64",
@@ -77,7 +93,9 @@
                 "--build-type=${input:buildType}"
             ],
             "group": "build",
-            "problemMatcher": ["$clang"]
+            "problemMatcher": [
+                "$clang"
+            ]
         }
     ]
 }

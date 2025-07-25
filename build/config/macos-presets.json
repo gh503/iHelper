@@ -10,10 +10,6 @@
       "name": "macos-base",
       "hidden": true,
       "generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0"
-      },
       "environment": {
         "CC": "clang",
         "CXX": "clang++"
