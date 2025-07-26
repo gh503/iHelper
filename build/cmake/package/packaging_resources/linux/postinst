@@ -1,0 +1,23 @@
+#!/bin/bash
+# 安装后脚本
+echo "iHelperCP ${VERSION} installed successfully"
+
+# 更新桌面数据库
+if [ -x "$(command -v update-desktop-database)" ]; then
+    update-desktop-database
+fi
+
+# 设置权限
+chmod 755 /opt/iHelperCP/bin/*
+
+# 创建桌面快捷方式
+DESKTOP_FILE="/usr/share/applications/iHelperCP.desktop"
+cat << EOF > ${DESKTOP_FILE}
+[Desktop Entry]
+Name=iHelperCP
+Exec=/opt/iHelperCP/bin/iHelper
+Icon=/opt/iHelperCP/share/icons/iHelper.png
+Terminal=false
+Type=Application
+Categories=Utility;
+EOF

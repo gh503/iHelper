@@ -74,6 +74,12 @@ target_link_libraries(CorePlatformTests PRIVATE
 # 确保静态库先构建
 add_dependencies(CorePlatformTests CorePlatform_static)
 
+# 应用签名（如果全局启用）
+auto_sign_target(
+    TARGET_NAME CorePlatformTests
+    ${GLOBAL_SIGN_PARAMS}
+)
+
 # 安装测试可执行文件（可选）
 install(TARGETS CorePlatformTests
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/unittest

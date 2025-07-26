@@ -1,0 +1,15 @@
+#!/bin/bash
+# 卸载前脚本
+
+# 停止相关服务
+if systemctl is-active --quiet ihelpercp.service; then
+    systemctl stop ihelpercp.service
+fi
+
+# 删除桌面快捷方式
+rm -f /usr/share/applications/iHelperCP.desktop
+
+# 更新桌面数据库
+if [ -x "$(command -v update-desktop-database)" ]; then
+    update-desktop-database
+fi

@@ -177,6 +177,12 @@ elseif(LINUX)
 
 endif()
 
+# 签名（如果全局启用）
+auto_sign_target(
+    TARGET_NAME CorePlatform_shared
+    ${GLOBAL_SIGN_PARAMS}
+)
+
 # 测试
 if(BUILD_TESTS)
     add_subdirectory(tests)

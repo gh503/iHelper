@@ -1,5 +1,72 @@
 cmake_minimum_required(VERSION 3.15)
-project(iHelperCP LANGUAGES CXX)
+
+set(PROJECT_NAME iHelperCP)
+# 读取 VERSION 文件
+if(EXISTS "${CMAKE_SOURCE_DIR}/VERSION")
+    file(STRINGS "${CMAKE_SOURCE_DIR}/VERSION" PROJECT_VERSION)
+    string(STRIP "${PROJECT_VERSION}" PROJECT_VERSION)
+else()
+    set(PROJECT_VERSION "1.0.0")
+    message(WARNING "VERSION file not found, using default version: ${PROJECT_VERSION}")
+endif()
+
+project(${PROJECT_NAME} VERSION ${PROJECT_VERSION} LANGUAGES CXX)
+
+# 全局签名开关
+option(ENABLE_CODE_SIGNING "Enable code signing" ON)
+
+# 调试签名开关
+option(ENABLE_DEBUG_SIGNING "Enable debug signing mode" ON)
+
+# 打包控制选项
+option(ENABLE_COMPRESSED_PACKAGE "Enable compressed package creation" OFF)
+
+# 构建安装包控制选项
+option(ENABLE_INSTALLER_PACKAGE "Enable installer package creation" OFF)
+
+# 设置签名证书信息
+if(WIN32)
+    # 调试模式使用特殊证书路径，生产模式使用正式证书
+    if(ENABLE_DEBUG_SIGNING)
+        set(SIGN_CERT_FILE "${CMAKE_BINARY_DIR}/debug_cert.pfx")
+    else()
+        set(SIGN_CERT_FILE "C:/certs/production_cert.pfx")
+        set(SIGN_CERT_PASSWORD_VAR "PROD_CERT_PASSWORD")
+    endif()
+elseif(APPLE)
+    set(SIGN_IDENTITY "Developer ID Application: gh503 (ABCD1234EF)")
+endif()
+
+# 设置全局签名参数
+set(GLOBAL_SIGN_PARAMS)
+if(ENABLE_CODE_SIGNING)
+    # Windows 签名参数
+    if(WIN32)
+        if(ENABLE_DEBUG_SIGNING)
+            set(GLOBAL_SIGN_CERT_FILE "${CMAKE_SOURCE_DIR}/build/cmake/sign/debug_cert.pfx")
+        else()
+            set(GLOBAL_SIGN_CERT_FILE "C:/certs/production_cert.pfx")
+            set(GLOBAL_SIGN_CERT_PASSWORD_VAR "MY_APP_CERT_PASSWORD")
+        endif()
+    endif()
+    
+    # macOS 签名参数
+    if(APPLE)
+        if(ENABLE_DEBUG_SIGNING)
+            set(GLOBAL_MAC_IDENTITY "ad-hoc")
+        else()
+            set(GLOBAL_MAC_IDENTITY "Developer ID Application: My Company (ABCD1234EF)")
+        endif()
+    endif()
+    
+    # 将参数保存为全局变量
+    set(GLOBAL_SIGN_PARAMS
+        WIN_CERT_FILE ${GLOBAL_SIGN_CERT_FILE}
+        WIN_CERT_PASSWORD_VAR ${GLOBAL_SIGN_CERT_PASSWORD_VAR}
+        MAC_IDENTITY ${GLOBAL_MAC_IDENTITY}
+        DEBUG_MODE ${ENABLE_DEBUG_SIGNING}
+    )
+endif()
 
 # 设置默认构建类型
 if(NOT CMAKE_BUILD_TYPE)
@@ -12,6 +79,8 @@ list(APPEND CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/build/cmake
     ${CMAKE_SOURCE_DIR}/build/cmake/version
     ${CMAKE_SOURCE_DIR}/build/cmake/UAC
+    ${CMAKE_SOURCE_DIR}/build/cmake/sign
+    ${CMAKE_SOURCE_DIR}/build/cmake/package
 )
 
 # 包含平台配置
@@ -20,76 +89,91 @@ include(PlatformConfig)
 include(Versioning)
 # windows提权
 include(UacElevation)
+# 签名
+include(Signing)
+# 打包
+include(Packaging)
 
 # 添加子目录
 add_subdirectory(src/CorePlatform)
 add_subdirectory(src/app/iHelper)
 
-# 打包支持
-# ====================== CPack 打包配置 ======================
-# include(InstallRequiredSystemLibraries)
-set(CPACK_PACKAGE_NAME "iHelper")
-set(CPACK_PACKAGE_VENDOR "gh503 angus_robot@163.com")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "iHelper - Cross-platform Helper Agent")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-# 包文件格式
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
-# 平台特定打包配置
-if(WIN32)
-    set(CPACK_GENERATOR "ZIP;NSIS")
-    
-    # NSIS 配置
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/assets/installer.ico")
-    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/assets/uninstaller.ico")
-    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-    set(CPACK_NSIS_MODIFY_PATH OFF)
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "iHelper.exe")
-    set(CPACK_NSIS_MENU_LINKS
-        "README.md" "Readme"
-        "LICENSE" "License"
+# 安装项目关键文件（统一安装）
+install(
+    FILES 
+        ${CMAKE_SOURCE_DIR}/VERSION
+        ${CMAKE_SOURCE_DIR}/LICENSE
+    DESTINATION .
+)
+
+# 安装文档目录（如果存在）
+if(EXISTS "${CMAKE_SOURCE_DIR}/docs")
+    install(
+        DIRECTORY ${CMAKE_SOURCE_DIR}/docs/
+        DESTINATION docs
+        PATTERN ".gitkeep" EXCLUDE
+        PATTERN ".DS_Store" EXCLUDE
     )
-    set(CPACK_NSIS_SIGN_COMMAND "signtool sign /a /t http://timestamp.digicert.com /fd sha256")
-    
-elseif(APPLE)
-    set(CPACK_GENERATOR "DragNDrop")
-    
-    # DMG 配置
-    set(CPACK_DMG_VOLUME_NAME "iHelper")
-    set(CPACK_DMG_FORMAT "UDBZ")
-    set(CPACK_DMG_BACKGROUND_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/assets/mac-background.png")
-    set(CPACK_DMG_DS_STORE_SETUP_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/scripts/setup_ds_store.scpt")
-    set(CPACK_DMG_SIGN "Developer ID Application: gh503 (TEAMID)")
-    
 else()
-    set(CPACK_GENERATOR "TGZ;DEB")
-    
-    # Debian 包配置
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "gh503 <angus_robot@163.com>")
-    set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.14)")
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA 
-        "${CMAKE_CURRENT_SOURCE_DIR}/scripts/postinstall.sh"
-    )
+    message(WARNING "docs directory not found: ${CMAKE_SOURCE_DIR}/docs")
 endif()
 
-# 添加组件支持
-set(CPACK_COMPONENTS_ALL libraries headers docs)
-
-include(CPack)
-cpack_add_component(libraries
-    DISPLAY_NAME "Core Libraries"
-    DESCRIPTION "CorePlatform static libraries"
-    REQUIRED
+# 打包配置
+configure_packaging(
+    "${PROJECT_NAME}"
+    "gh503"
+    "iHelper Application Suite"
 )
 
-cpack_add_component(headers
-    DISPLAY_NAME "Header Files"
-    DESCRIPTION "C++ header files for development"
-    REQUIRED
-)
-
-cpack_add_component(docs
-    DISPLAY_NAME "Documentation"
-    DESCRIPTION "License and readme files"
-)
+# 安装后步骤 - 创建成功标志
+install(CODE [[
+    # 获取时间戳
+    if(WIN32)
+        execute_process(
+            COMMAND cmd /c "echo %DATE% %TIME%"
+            OUTPUT_VARIABLE TIMESTAMP
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    else()
+        execute_process(
+            COMMAND date "+%Y-%m-%d %H:%M:%S"
+            OUTPUT_VARIABLE TIMESTAMP
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    endif()
+    
+    # 获取主机名
+    if(WIN32)
+        set(HOSTNAME "$ENV{COMPUTERNAME}")
+    else()
+        # Linux 和 macOS
+        execute_process(
+            COMMAND hostname
+            OUTPUT_VARIABLE HOSTNAME
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    endif()
+    
+    # 创建构建成功标志
+    file(WRITE "${CMAKE_INSTALL_PREFIX}/build_success.flag" 
+        "Project: ${PROJECT_NAME}\n"
+        "Version: ${PROJECT_VERSION}\n"
+        "Timestamp: ${TIMESTAMP}\n"
+        "Host: ${HOSTNAME}\n"
+        "Platform: ${PLATFORM_NAME}\n"
+        "Build Type: ${CMAKE_BUILD_TYPE}\n"
+    )
+    
+    # 验证关键文件
+    set(REQUIRED_FILES 
+        "VERSION"
+        "LICENSE"
+        "build_success.flag"
+    )
+    
+    foreach(FILE IN LISTS REQUIRED_FILES)
+        if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/${FILE}")
+            message(WARNING "Required file missing: ${CMAKE_INSTALL_PREFIX}/${FILE}")
+        endif()
+    endforeach()
+]])

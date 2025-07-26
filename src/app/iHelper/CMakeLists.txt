@@ -22,6 +22,12 @@ target_link_libraries(${BIN} PRIVATE
     CorePlatform_static
 )
 
+# 应用签名（如果全局启用）
+auto_sign_target(
+    TARGET_NAME ${BIN}
+    ${GLOBAL_SIGN_PARAMS}
+)
+
 # 安装目标
 install(TARGETS ${BIN}
     RUNTIME DESTINATION bin
