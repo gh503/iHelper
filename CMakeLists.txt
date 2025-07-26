@@ -11,12 +11,15 @@ endif()
 list(APPEND CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/build/cmake
     ${CMAKE_SOURCE_DIR}/build/cmake/version
+    ${CMAKE_SOURCE_DIR}/build/cmake/UAC
 )
 
 # 包含平台配置
 include(PlatformConfig)
-# 包含版本管理模块
+# 包含版本管理
 include(Versioning)
+# windows提权
+include(UacElevation)
 
 # 添加子目录
 add_subdirectory(src/CorePlatform)

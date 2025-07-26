@@ -4,14 +4,48 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
-#include <cstdlib> // 用于 getenv
+#include <cstdlib>
 #include <chrono>
+
+#if defined(_WIN32)
+#include <Windows.h>
+#include <io.h>
+#define ISATTY _isatty
+#define FILENO _fileno
+#else
+#include <unistd.h>
+#define ISATTY isatty
+#define FILENO fileno
+#endif
 
 class TimestampedListener : public testing::EmptyTestEventListener {
 public:
     explicit TimestampedListener(std::ostream* console_stream, std::ostream* file_stream = nullptr) 
         : console_stream_(console_stream), file_stream_(file_stream) {
+        InitializeConsole();
         use_color_ = ShouldUseColor();
+    }
+    
+    ~TimestampedListener() {
+        #if defined(_WIN32)
+        if (original_console_mode_ != 0) {
+            SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), original_console_mode_);
+        }
+        #endif
+    }
+    
+    void InitializeConsole() {
+        #if defined(_WIN32)
+        // 设置控制台输入输出为UTF-8编码
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
+        
+        // 获取原始控制台模式以便恢复
+        HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hStdout != INVALID_HANDLE_VALUE) {
+            GetConsoleMode(hStdout, &original_console_mode_);
+        }
+        #endif
     }
     
     std::string TimestampPrefix() {
@@ -20,19 +54,22 @@ public:
         auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
         auto epoch = now_ms.time_since_epoch();
         auto value = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
-
-        // 转换为 time_t（秒级精度）
         std::time_t now_t = std::chrono::system_clock::to_time_t(now);
-
-        // 转换为本地时间
-        std::tm* now_tm = std::localtime(&now_t);
-
+        
+        // 线程安全的时间转换
+        struct tm time_info;
+        #if defined(_WIN32)
+        localtime_s(&time_info, &now_t);
+        #else
+        localtime_r(&now_t, &time_info);
+        #endif
+        
         // 提取毫秒部分
         long milliseconds = value.count() % 1000;
 
         std::ostringstream oss;
         // 格式化输出：YYYY-MM-DD HH:MM:SS.sss
-        oss << "[" << std::put_time(now_tm, "%Y-%m-%d %H:%M:%S")
+        oss << "[" << std::put_time(&time_info, "%Y-%m-%d %H:%M:%S")
             << '.' << std::setfill('0') << std::setw(3) << milliseconds << "]";
         return oss.str();
     }
@@ -87,12 +124,25 @@ public:
         }
         
         // 自动检测：检查是否输出到终端
-        #ifdef _WIN32
-        // Windows 检测
-        return ::_isatty(::_fileno(stdout)) != 0;
+        #if defined(_WIN32)
+        // Windows 检测和控制台设置
+        if (console_stream_ == &std::cout) {
+            HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (hStdout != INVALID_HANDLE_VALUE) {
+                DWORD mode;
+                if (GetConsoleMode(hStdout, &mode)) {
+                    // 启用虚拟终端处理
+                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                    if (SetConsoleMode(hStdout, mode)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
         #else
         // Linux/macOS 检测
-        return ::isatty(fileno(stdout)) != 0;
+        return ISATTY(FILENO(stdout)) != 0;
         #endif
     }
     
@@ -214,4 +264,8 @@ private:
     // 时间记录
     std::chrono::steady_clock::time_point test_start_time_;
     std::chrono::steady_clock::time_point program_start_time_;
+    
+    #if defined(_WIN32)
+    DWORD original_console_mode_ = 0;
+    #endif
 };

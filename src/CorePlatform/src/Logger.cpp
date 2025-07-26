@@ -27,6 +27,21 @@ Logger::Logger() :
             std::filesystem::create_directories(dir);
         }
     }
+    #ifdef _WIN32
+    if (consoleOutput_) {
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
+        HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hStdout != INVALID_HANDLE_VALUE) {
+            DWORD mode;
+            if (GetConsoleMode(hStdout, &mode)) {
+                // 启用虚拟终端处理
+                mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                SetConsoleMode(hStdout, mode);
+            }
+        }
+    }
+    #endif
 }
 
 Logger::~Logger() {
@@ -63,30 +78,34 @@ bool Logger::setLogFile(const std::string& path) {
     logFilePath_ = path;
 
 #ifdef _WIN32
-    // Windows 专用: 使用共享模式打开
+    // 使用安全的 _wsopen_s 替代 _wsopen
     std::wstring widePath(path.begin(), path.end());
-    int fd = _wsopen(
+    int fd = -1;
+    errno_t err = _wsopen_s(
+        &fd,
         widePath.c_str(),
         _O_WRONLY | _O_CREAT | _O_APPEND,
         _SH_DENYNO,  // 允许其他进程读取
         _S_IREAD | _S_IWRITE
     );
     
-    if (fd == -1) {
+    if (err != 0) {
         // 尝试创建目录
         std::filesystem::path pathObj(path);
         std::filesystem::create_directories(pathObj.parent_path());
         
         // 再次尝试打开
-        fd = _wsopen(
+        err = _wsopen_s(
+            &fd,
             widePath.c_str(),
             _O_WRONLY | _O_CREAT | _O_APPEND,
             _SH_DENYNO,
             _S_IREAD | _S_IWRITE
         );
         
-        if (fd == -1) {
-            std::cerr << "Failed to open log file: " << path << std::endl;
+        if (err != 0) {
+            std::cerr << "Failed to open log file: " << path 
+                      << ", error: " << err << std::endl;
             return false;
         }
     }
@@ -131,7 +150,20 @@ std::string Logger::getCurrentTime() const {
                 now.time_since_epoch()) % 1000;
     
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %H:%M:%S");
+    
+    // 跨平台安全的本地时间获取
+    struct tm time_info;
+#if defined(_WIN32)
+    if (localtime_s(&time_info, &in_time_t)) {
+        memset(&time_info, 0, sizeof(time_info));  // 出错时使用默认值
+    }
+#else
+    if (!localtime_r(&in_time_t, &time_info)) {
+        memset(&time_info, 0, sizeof(time_info));  // 出错时使用默认值
+    }
+#endif
+
+    ss << std::put_time(&time_info, "%Y-%m-%d %H:%M:%S");
     ss << '.' << std::setfill('0') << std::setw(3) << ms.count();
     return ss.str();
 }
@@ -201,8 +233,10 @@ void Logger::logInternal(LogLevel level, const std::string& message) {
     // 控制台输出
     if (consoleOutput_) {
         setConsoleColor(level);
-        std::cout << logEntry << std::endl;
+        std::cout << logEntry;
         resetConsoleColor();
+        std::cout << std::endl;
+        std::cout.flush();
     }
     
     // 文件输出

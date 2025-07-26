@@ -12,6 +12,10 @@ setup_version(${BIN} ${iHelper_VERSION_FILE}
     EMAIL "angus_robot@163.com"
     COPYRIGHT "Copyright (C) 2024-2025 gh503"
 )
+# 启用 UAC 提权
+enable_uac_elevation(${BIN}
+    LEVEL "requireAdministrator"
+)
 
 # 链接依赖库
 target_link_libraries(${BIN} PRIVATE
@@ -23,6 +27,15 @@ install(TARGETS ${BIN}
     RUNTIME DESTINATION bin
     BUNDLE DESTINATION bundle
 )
+
+# 安装 PDB 文件
+if(WIN32)
+    install(FILES $<TARGET_PDB_FILE:${BIN}>
+        DESTINATION bin
+        CONFIGURATIONS RelWithDebInfo Debug
+        OPTIONAL
+    )
+endif()
 
 # 安装配置文件
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config

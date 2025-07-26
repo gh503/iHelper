@@ -26,6 +26,7 @@ if(PLATFORM_WINDOWS)
         src/Windows/SystemInfoWin.cpp
         src/Windows/ThreadWin.cpp
         src/Windows/HostOperationsWin.cpp
+        src/Windows/UAC.cpp
         src/Windows/WindowsUtils.cpp
     )
 elseif(PLATFORM_MACOS)
@@ -76,6 +77,7 @@ set(PUBLIC_HEADERS
 if(WIN32)
     list(APPEND PUBLIC_HEADERS include/CorePlatform/Windows/WindowsUtils.h)
     list(APPEND PUBLIC_HEADERS include/CorePlatform/Windows/Registry.h)
+    list(APPEND PUBLIC_HEADERS include/CorePlatform/Windows/UAC.h)
 endif()
 
 # ================ 创建静态库 ================
@@ -208,14 +210,14 @@ install(TARGETS CorePlatform_static CorePlatform_shared EXPORT CorePlatformTarge
 )
 install(
     DIRECTORY include/CorePlatform/
-    DESTINATION include/CorePlatform/
+    DESTINATION include/CorePlatform
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN "Windows" EXCLUDE   # 排除已单独安装的子目录
 )
 if(WIN32)
     install(DIRECTORY include/CorePlatform/Windows 
-        DESTINATION include/CorePlatform/
+        DESTINATION include/CorePlatform
     )
 endif()
 

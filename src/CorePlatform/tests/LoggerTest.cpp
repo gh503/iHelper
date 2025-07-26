@@ -6,21 +6,19 @@
 #include <vector>
 #include <regex>
 
-namespace CP = CorePlatform;
-namespace CPPT = CorePlatformTest;
-using namespace CP;
+using namespace CorePlatformTest;
 
 class LoggerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         // 重置Logger状态
-        Logger::getInstance().setLevel(LogLevel::INFO);
-        Logger::getInstance().setConsoleOutput(false);
+        CorePlatform::Logger::getInstance().setLevel(CorePlatform::LogLevel::INFO);
+        CorePlatform::Logger::getInstance().setConsoleOutput(false);
         
         // 创建临时日志文件
-        tempDir = std::make_unique<CPPT::TempDirectory>("LoggerTest");
+        tempDir = std::make_unique<TempDirectory>("LoggerTest");
         logFilePath = tempDir->CreateFilePath("test.log");
-        ASSERT_TRUE(Logger::getInstance().setLogFile(logFilePath));
+        ASSERT_TRUE(CorePlatform::Logger::getInstance().setLogFile(logFilePath));
     }
     
     void TearDown() override {
@@ -38,27 +36,27 @@ protected:
         return lines;
     }
     
-    std::unique_ptr<CPPT::TempDirectory> tempDir;
+    std::unique_ptr<TempDirectory> tempDir;
     std::string logFilePath;
 };
 
 // 测试单例模式
 TEST_F(LoggerTest, SingletonPattern) {
-    Logger& logger1 = Logger::getInstance();
-    Logger& logger2 = Logger::getInstance();
+    CorePlatform::Logger& logger1 = CorePlatform::Logger::getInstance();
+    CorePlatform::Logger& logger2 = CorePlatform::Logger::getInstance();
     ASSERT_EQ(&logger1, &logger2);
     
     // 测试拷贝构造删除
-    EXPECT_TRUE(std::is_copy_constructible<Logger>::value == false);
+    EXPECT_TRUE(std::is_copy_constructible<CorePlatform::Logger>::value == false);
     // 测试赋值操作删除
-    EXPECT_TRUE(std::is_copy_assignable<Logger>::value == false);
+    EXPECT_TRUE(std::is_copy_assignable<CorePlatform::Logger>::value == false);
 }
 
 // 测试日志级别设置和过滤
 TEST_F(LoggerTest, LogLevelFiltering) {
-    Logger& logger = Logger::getInstance();
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
     
-    logger.setLevel(LogLevel::WARN);
+    logger.setLevel(CorePlatform::LogLevel::WARN);
     logger.trace("This trace should NOT appear");
     logger.debug("This debug should NOT appear");
     logger.info("This info should NOT appear");
@@ -66,17 +64,18 @@ TEST_F(LoggerTest, LogLevelFiltering) {
     logger.error("This error should appear");
     
     auto logs = logger.readAllLogs();
-    CPPT::VerifyLogEntry(logs, LogLevel::TRACE, "NOT appear", 0);
-    CPPT::VerifyLogEntry(logs, LogLevel::DEBUG, "NOT appear", 0);
-    CPPT::VerifyLogEntry(logs, LogLevel::INFO, "NOT appear", 0);
-    CPPT::VerifyLogEntry(logs, LogLevel::WARN, "should appear");
-    CPPT::VerifyLogEntry(logs, LogLevel::ERR, "should appear");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::TRACE, "NOT appear", 0);
+    VerifyLogEntry(logs, CorePlatform::LogLevel::DEBUG, "NOT appear", 0);
+    VerifyLogEntry(logs, CorePlatform::LogLevel::INFO, "NOT appear", 0);
+    VerifyLogEntry(logs, CorePlatform::LogLevel::WARN, "should appear");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::ERR, "should appear");
 }
 
 // 测试控制台输出
 TEST_F(LoggerTest, ConsoleOutput) {
-    Logger& logger = Logger::getInstance();
-    logger.setLevel(LogLevel::TRACE);
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
+    logger.setLevel(CorePlatform::LogLevel::TRACE);
+    logger.setConsoleOutput(true);
     
     logger.trace("Trace convenience");
     logger.debug("Debug convenience");
@@ -86,17 +85,17 @@ TEST_F(LoggerTest, ConsoleOutput) {
     logger.fatal("Fatal convenience");
     
     auto logs = logger.readAllLogs();
-    CPPT::VerifyLogEntry(logs, LogLevel::TRACE, "Trace convenience");
-    CPPT::VerifyLogEntry(logs, LogLevel::DEBUG, "Debug convenience");
-    CPPT::VerifyLogEntry(logs, LogLevel::INFO, "Info convenience");
-    CPPT::VerifyLogEntry(logs, LogLevel::WARN, "Warn convenience");
-    CPPT::VerifyLogEntry(logs, LogLevel::ERR, "Error convenience");
-    CPPT::VerifyLogEntry(logs, LogLevel::FATAL, "Fatal convenience");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::TRACE, "Trace convenience");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::DEBUG, "Debug convenience");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::INFO, "Info convenience");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::WARN, "Warn convenience");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::ERR, "Error convenience");
+    VerifyLogEntry(logs, CorePlatform::LogLevel::FATAL, "Fatal convenience");
 }
 
 // 测试日志读取功能
 TEST_F(LoggerTest, LogReadingFunctions) {
-    Logger& logger = Logger::getInstance();
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
     
     // 生成50条测试日志
     for (int i = 1; i <= 50; i++) {
@@ -106,35 +105,35 @@ TEST_F(LoggerTest, LogReadingFunctions) {
     // 测试读取全部日志
     auto allLogs = logger.readAllLogs();
     ASSERT_EQ(allLogs.size(), 50);
-    CPPT::VerifyLogEntry(allLogs, LogLevel::INFO, "Log entry 25");
+    VerifyLogEntry(allLogs, CorePlatform::LogLevel::INFO, "Log entry 25");
     
     // 测试从开头读取
     auto first10 = logger.readLogsFromBeginning(10);
     ASSERT_EQ(first10.size(), 10);
-    CPPT::VerifyLogEntry(first10, LogLevel::INFO, "Log entry 1", 2);
-    CPPT::VerifyLogEntry(first10, LogLevel::INFO, "Log entry 10");
-    CPPT::VerifyLogEntry(first10, LogLevel::INFO, "Log entry 11", 0);
+    VerifyLogEntry(first10, CorePlatform::LogLevel::INFO, "Log entry 1", 2);
+    VerifyLogEntry(first10, CorePlatform::LogLevel::INFO, "Log entry 10");
+    VerifyLogEntry(first10, CorePlatform::LogLevel::INFO, "Log entry 11", 0);
     
     // 测试从末尾读取
     auto last10 = logger.readLogsFromEnd(10);
     ASSERT_EQ(last10.size(), 10);
-    CPPT::VerifyLogEntry(last10, LogLevel::INFO, "Log entry 50");
-    CPPT::VerifyLogEntry(last10, LogLevel::INFO, "Log entry 41");
-    CPPT::VerifyLogEntry(last10, LogLevel::INFO, "Log entry 40", 0);
+    VerifyLogEntry(last10, CorePlatform::LogLevel::INFO, "Log entry 50");
+    VerifyLogEntry(last10, CorePlatform::LogLevel::INFO, "Log entry 41");
+    VerifyLogEntry(last10, CorePlatform::LogLevel::INFO, "Log entry 40", 0);
     
     // 测试范围读取
     auto rangeLogs = logger.readLogsInRange(20, 30);
     ASSERT_EQ(rangeLogs.size(), 11); // 包含第20条和第30条
-    CPPT::VerifyLogEntry(rangeLogs, LogLevel::INFO, "Log entry 20");
-    CPPT::VerifyLogEntry(rangeLogs, LogLevel::INFO, "Log entry 25");
-    CPPT::VerifyLogEntry(rangeLogs, LogLevel::INFO, "Log entry 30");
-    CPPT::VerifyLogEntry(rangeLogs, LogLevel::INFO, "Log entry 19", 0);
-    CPPT::VerifyLogEntry(rangeLogs, LogLevel::INFO, "Log entry 31", 0);
+    VerifyLogEntry(rangeLogs, CorePlatform::LogLevel::INFO, "Log entry 20");
+    VerifyLogEntry(rangeLogs, CorePlatform::LogLevel::INFO, "Log entry 25");
+    VerifyLogEntry(rangeLogs, CorePlatform::LogLevel::INFO, "Log entry 30");
+    VerifyLogEntry(rangeLogs, CorePlatform::LogLevel::INFO, "Log entry 19", 0);
+    VerifyLogEntry(rangeLogs, CorePlatform::LogLevel::INFO, "Log entry 31", 0);
 }
 
 // 测试日志搜索功能
 TEST_F(LoggerTest, LogSearchFunction) {
-    Logger& logger = Logger::getInstance();
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
     
     logger.info("Search test: apple");
     logger.warn("Search test: banana");
@@ -158,8 +157,8 @@ TEST_F(LoggerTest, LogSearchFunction) {
 
 // 测试多线程安全
 TEST_F(LoggerTest, ThreadSafety) {
-    Logger& logger = Logger::getInstance();
-    logger.setLevel(LogLevel::INFO);
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
+    logger.setLevel(CorePlatform::LogLevel::INFO);
     
     constexpr int THREAD_COUNT = 10;
     constexpr int LOGS_PER_THREAD = 100;
@@ -200,7 +199,7 @@ TEST_F(LoggerTest, ThreadSafety) {
 
 // 测试日志格式
 TEST_F(LoggerTest, LogFormat) {
-    Logger& logger = Logger::getInstance();
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
     logger.info("Format test message");
     
     auto logs = logger.readAllLogs();
@@ -214,7 +213,7 @@ TEST_F(LoggerTest, LogFormat) {
 
 // 测试日志文件切换
 TEST_F(LoggerTest, LogFileSwitching) {
-    Logger& logger = Logger::getInstance();
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
     
     // 在第一个文件写日志
     logger.info("First file log");
@@ -228,20 +227,20 @@ TEST_F(LoggerTest, LogFileSwitching) {
 
     // 验证第一个文件内容
     auto firstLogs = ReadLogFileDirectly();
-    CPPT::VerifyLogEntry(firstLogs, LogLevel::INFO, "First file log");
-    CPPT::VerifyLogEntry(firstLogs, LogLevel::INFO, "Second file log", 0);
+    VerifyLogEntry(firstLogs, CorePlatform::LogLevel::INFO, "First file log");
+    VerifyLogEntry(firstLogs, CorePlatform::LogLevel::INFO, "Second file log", 0);
     
     // 验证第二个文件内容 - 使用行分割
-    auto secondLogContent = FileSystem::ReadTextFile(newLogPath);
-    auto secondLogLines = CPPT::SplitIntoLines(secondLogContent);
+    auto secondLogContent = CorePlatform::FileSystem::ReadTextFile(newLogPath);
+    auto secondLogLines = SplitIntoLines(secondLogContent);
     ASSERT_FALSE(secondLogLines.empty());
-    CPPT::VerifyLogEntry(secondLogLines, LogLevel::INFO, "Second file log");
-    CPPT::VerifyLogEntry(secondLogLines, LogLevel::INFO, "First file log", 0);
+    VerifyLogEntry(secondLogLines, CorePlatform::LogLevel::INFO, "Second file log");
+    VerifyLogEntry(secondLogLines, CorePlatform::LogLevel::INFO, "First file log", 0);
 }
 
 // 测试大日志处理
 TEST_F(LoggerTest, LargeLogHandling) {
-    Logger& logger = Logger::getInstance();
+    CorePlatform::Logger& logger = CorePlatform::Logger::getInstance();
     
     // 生成10KB的日志消息
     std::string largeMsg(10*1024, 'X');

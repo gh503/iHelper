@@ -78,3 +78,10 @@ add_dependencies(CorePlatformTests CorePlatform_static)
 install(TARGETS CorePlatformTests
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/unittest
 )
+
+# 如果需要安装所有依赖的 PDB
+install(FILES $<TARGET_PDB_FILE:CorePlatformTests> 
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/unittest
+    CONFIGURATIONS RelWithDebInfo Debug
+    OPTIONAL
+)

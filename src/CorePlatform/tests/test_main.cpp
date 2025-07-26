@@ -1,4 +1,4 @@
-#include "GTestLog.h"
+#include "CorePlatform/GTestLog.h"
 
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
