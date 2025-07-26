@@ -11,6 +11,9 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <accctrl.h>
+#include <aclapi.h>
+#include <system_error>
 
 #pragma comment(lib, "Shlwapi.lib")
 
@@ -688,6 +691,121 @@ void FileSystem::ScopedFileLock::Unlock() {
     CloseHandle(hFile);
 
     isLocked = false;
+}
+
+bool FileSystem::SetPermissions(const std::string& path, int permissions) {
+    std::wstring wpath = WindowsUtils::UTF8ToWide(path);
+    
+    // 获取当前DACL
+    PACL pOldDACL = nullptr;
+    PSECURITY_DESCRIPTOR pSD = nullptr;
+    DWORD result = GetNamedSecurityInfoW(
+        wpath.c_str(),
+        SE_FILE_OBJECT,
+        DACL_SECURITY_INFORMATION,
+        nullptr,
+        nullptr,
+        &pOldDACL,
+        nullptr,
+        &pSD
+    );
+    
+    if (result != ERROR_SUCCESS) {
+        if (pSD) LocalFree(pSD);
+        return false;
+    }
+    
+    // 正确初始化结构体
+    EXPLICIT_ACCESS_W ea;
+    ZeroMemory(&ea, sizeof(ea));
+    
+    // 设置权限
+    ea.grfAccessPermissions = 0;
+    ea.grfAccessMode = SET_ACCESS;
+    ea.grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+    ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+    ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
+    
+    // 解决常量问题
+    static wchar_t currentUser[] = L"CURRENT_USER";
+    ea.Trustee.ptstrName = currentUser;
+    
+    // 映射权限 - 添加显式类型转换
+    if (permissions & static_cast<int>(Permissions::OWNER_READ)) 
+        ea.grfAccessPermissions |= GENERIC_READ;
+    if (permissions & static_cast<int>(Permissions::OWNER_WRITE)) 
+        ea.grfAccessPermissions |= GENERIC_WRITE;
+    if (permissions & static_cast<int>(Permissions::OWNER_EXEC)) 
+        ea.grfAccessPermissions |= GENERIC_EXECUTE;
+    
+    // 应用新的DACL
+    PACL pNewDACL = nullptr;
+    result = SetEntriesInAclW(1, &ea, pOldDACL, &pNewDACL);
+    if (result != ERROR_SUCCESS) {
+        LocalFree(pSD);
+        return false;
+    }
+    
+    // 创建可修改的路径缓冲区
+    std::vector<wchar_t> modifiablePath(wpath.size() + 1);
+    wcscpy_s(modifiablePath.data(), modifiablePath.size(), wpath.c_str());
+    
+    // 设置新的安全描述符
+    result = SetNamedSecurityInfoW(
+        modifiablePath.data(),
+        SE_FILE_OBJECT,
+        DACL_SECURITY_INFORMATION,
+        nullptr,
+        nullptr,
+        pNewDACL,
+        nullptr
+    );
+    
+    // 清理资源
+    if (pSD) LocalFree(pSD);
+    if (pNewDACL) LocalFree(pNewDACL);
+    
+    return result == ERROR_SUCCESS;
+}
+
+int FileSystem::GetPermissions(const std::string& path) {
+    std::wstring wpath = WindowsUtils::UTF8ToWide(path);
+    DWORD attrs = GetFileAttributesW(wpath.c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
+        return -1;
+    }
+    
+    // 使用基础类型初始化
+    int perms = static_cast<int>(Permissions::NONE);
+    
+    // 检查只读属性
+    if (!(attrs & FILE_ATTRIBUTE_READONLY)) {
+        perms |= static_cast<int>(Permissions::OWNER_WRITE);
+    }
+    
+    // Windows 上所有文件都有读权限
+    perms |= static_cast<int>(Permissions::OWNER_READ);
+    
+    // 检查文件扩展名判断执行权限
+    std::string ext = GetFileExtension(path);
+    if (ext == "exe" || ext == "bat" || ext == "cmd" || ext == "com" || 
+        ext == "ps1" || ext == "vbs" || ext == "js") {
+        perms |= static_cast<int>(Permissions::OWNER_EXEC);
+    }
+    
+    return perms;
+}
+
+bool FileSystem::AddPermissions(const std::string& path, int permissions) {
+    int current = GetPermissions(path);
+    if (current == -1) return false;
+    return SetPermissions(path, current | permissions);
+}
+
+bool FileSystem::RemovePermissions(const std::string& path, int permissions) {
+    int current = GetPermissions(path);
+    if (current == -1) return false;
+    return SetPermissions(path, current & ~permissions);
 }
 
 } // namespace CorePlatform

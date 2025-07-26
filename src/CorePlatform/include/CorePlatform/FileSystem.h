@@ -32,6 +32,84 @@ public:
         Other       // 其他类型
     };
 
+    enum class Permissions {
+        NONE = 0,           ///< 无权限
+        
+        // 所有者权限
+        OWNER_READ = 0400,   ///< 所有者读权限
+        OWNER_WRITE = 0200,  ///< 所有者写权限
+        OWNER_EXEC = 0100,   ///< 所有者执行权限
+        OWNER_ALL = 0700,    ///< 所有者所有权限 (读+写+执行)
+        
+        // 组权限
+        GROUP_READ = 040,    ///< 组读权限
+        GROUP_WRITE = 020,   ///< 组写权限
+        GROUP_EXEC = 010,    ///< 组执行权限
+        GROUP_ALL = 070,     ///< 组所有权限
+        
+        // 其他用户权限
+        OTHERS_READ = 04,    ///< 其他用户读权限
+        OTHERS_WRITE = 02,   ///< 其他用户写权限
+        OTHERS_EXEC = 01,    ///< 其他用户执行权限
+        OTHERS_ALL = 07,     ///< 其他用户所有权限
+        
+        // 特殊权限
+        SET_UID = 04000,     ///< 设置用户ID
+        SET_GID = 02000,     ///< 设置组ID
+        STICKY_BIT = 01000,  ///< 粘滞位
+        
+        // 所有权限
+        ALL = 07777,         ///< 所有权限 (所有者+组+其他+特殊)
+        
+        // 常用组合
+        READ_ONLY = OWNER_READ | GROUP_READ | OTHERS_READ,
+        READ_WRITE = READ_ONLY | OWNER_WRITE | GROUP_WRITE | OTHERS_WRITE,
+        READ_EXEC = READ_ONLY | OWNER_EXEC | GROUP_EXEC | OTHERS_EXEC,
+        READ_WRITE_EXEC = READ_WRITE | READ_EXEC
+    };
+
+    /**
+     * @brief 设置文件或目录权限
+     * 
+     * @param path 文件或目录路径
+     * @param permissions 权限位掩码 (使用Permissions枚举)
+     * @return bool 是否成功设置权限
+     * 
+     * 示例:
+     *   // 设置文件为所有者读写，其他用户只读
+     *   FileSystem::SetPermissions("file.txt", 
+     *       FileSystem::Permissions::OWNER_READ | 
+     *       FileSystem::Permissions::OWNER_WRITE |
+     *       FileSystem::Permissions::OTHERS_READ);
+     */
+    static bool SetPermissions(const std::string& path, int permissions);
+
+    /**
+     * @brief 获取文件或目录权限
+     * 
+     * @param path 文件或目录路径
+     * @return int 当前权限位掩码，如果失败返回-1
+     */
+    static int GetPermissions(const std::string& path);
+
+    /**
+     * @brief 添加权限标志
+     * 
+     * @param path 文件或目录路径
+     * @param permissions 要添加的权限
+     * @return bool 是否成功
+     */
+    static bool AddPermissions(const std::string& path, int permissions);
+    
+    /**
+     * @brief 移除权限标志
+     * 
+     * @param path 文件或目录路径
+     * @param permissions 要移除的权限
+     * @return bool 是否成功
+     */
+    static bool RemovePermissions(const std::string& path, int permissions);
+
     // ===== 文件操作 =====
     
     // 检查文件或目录是否存在

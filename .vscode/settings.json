@@ -95,7 +95,11 @@
         "*.in": "cpp",
         "coroutine": "cpp",
         "resumable": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "numeric": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "valarray": "cpp"
     },
     "cmake.generator": "Ninja",
     "terminal.integrated.profiles.windows": {

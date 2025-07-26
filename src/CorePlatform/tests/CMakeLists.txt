@@ -25,32 +25,29 @@ FetchContent_MakeAvailable(googletest)
 
 # 源文件
 if(PLATFORM_WINDOWS)
-    set(SOURCES
-        test_main.cpp
-        FileSystemTest.cpp
-        NetworkTest.cpp
-        ProcessTest.cpp
+    set(PLATFORM_SOURCES
         RegistryTest.cpp
-        SystemInfoTest.cpp
-        LoggerTest.cpp
-        StringUtilsTest.cpp
     )
 elseif(PLATFORM_MACOS OR PLATFORM_LINUX)
-    set(SOURCES
-        test_main.cpp
-        FileSystemTest.cpp
-        FileSystemTest.cpp
-        NetworkTest.cpp
-        ProcessTest.cpp
-        SystemInfoTest.cpp
-        LoggerTest.cpp
-        StringUtilsTest.cpp
+    set(PLATFORM_SOURCES
     )
 endif()
+set(COMMON_SOURCES
+    test_main.cpp
+    FileSystemTest.cpp
+    JsonUtilsTest.cpp
+    NetworkTest.cpp
+    ProcessTest.cpp
+    SystemInfoTest.cpp
+    LoggerTest.cpp
+    StringUtilsTest.cpp
+    TimeUtilsTest.cpp
+)
 
 # 添加测试可执行文件
 add_executable(CorePlatformTests
-    ${SOURCES}
+    ${COMMON_SOURCES}
+    ${PLATFORM_SOURCES}
 )
 
 # 设置版本信息

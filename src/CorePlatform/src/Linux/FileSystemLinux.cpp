@@ -13,6 +13,7 @@
 #include <utime.h>
 #include <sys/time.h>
 #include <pwd.h>
+#include <stdexcept>
 
 namespace CorePlatform {
 
@@ -548,6 +549,67 @@ bool FileSystem::ScopedFileLock::Unlock() {
     close(fileDescriptor);
 
     isLocked = false;
+}
+
+bool FileSystem::SetPermissions(const std::string& path, int permissions) {
+    mode_t mode = 0;
+    
+    if (permissions & Permissions::OWNER_READ) mode |= S_IRUSR;
+    if (permissions & Permissions::OWNER_WRITE) mode |= S_IWUSR;
+    if (permissions & Permissions::OWNER_EXEC) mode |= S_IXUSR;
+    
+    if (permissions & Permissions::GROUP_READ) mode |= S_IRGRP;
+    if (permissions & Permissions::GROUP_WRITE) mode |= S_IWGRP;
+    if (permissions & Permissions::GROUP_EXEC) mode |= S_IXGRP;
+    
+    if (permissions & Permissions::OTHERS_READ) mode |= S_IROTH;
+    if (permissions & Permissions::OTHERS_WRITE) mode |= S_IWOTH;
+    if (permissions & Permissions::OTHERS_EXEC) mode |= S_IXOTH;
+    
+    if (permissions & Permissions::SET_UID) mode |= S_ISUID;
+    if (permissions & Permissions::SET_GID) mode |= S_ISGID;
+    if (permissions & Permissions::STICKY_BIT) mode |= S_ISVTX;
+    
+    return chmod(path.c_str(), mode) == 0;
+}
+
+int FileSystem::GetPermissions(const std::string& path) {
+    struct stat st;
+    if (stat(path.c_str(), &st) != 0) {
+        return -1;
+    }
+    
+    int perms = 0;
+    
+    if (st.st_mode & S_IRUSR) perms |= Permissions::OWNER_READ;
+    if (st.st_mode & S_IWUSR) perms |= Permissions::OWNER_WRITE;
+    if (st.st_mode & S_IXUSR) perms |= Permissions::OWNER_EXEC;
+    
+    if (st.st_mode & S_IRGRP) perms |= Permissions::GROUP_READ;
+    if (st.st_mode & S_IWGRP) perms |= Permissions::GROUP_WRITE;
+    if (st.st_mode & S_IXGRP) perms |= Permissions::GROUP_EXEC;
+    
+    if (st.st_mode & S_IROTH) perms |= Permissions::OTHERS_READ;
+    if (st.st_mode & S_IWOTH) perms |= Permissions::OTHERS_WRITE;
+    if (st.st_mode & S_IXOTH) perms |= Permissions::OTHERS_EXEC;
+    
+    if (st.st_mode & S_ISUID) perms |= Permissions::SET_UID;
+    if (st.st_mode & S_ISGID) perms |= Permissions::SET_GID;
+    if (st.st_mode & S_ISVTX) perms |= Permissions::STICKY_BIT;
+    
+    return perms;
+}
+
+bool FileSystem::AddPermissions(const std::string& path, int permissions) {
+    int current = GetPermissions(path);
+    if (current == -1) return false;
+    return SetPermissions(path, current | permissions);
+}
+
+bool FileSystem::RemovePermissions(const std::string& path, int permissions) {
+    int current = GetPermissions(path);
+    if (current == -1) return false;
+    return SetPermissions(path, current & ~permissions);
 }
 
 } // namespace CorePlatform

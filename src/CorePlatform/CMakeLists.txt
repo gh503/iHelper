@@ -25,6 +25,7 @@ if(PLATFORM_WINDOWS)
         src/Windows/Registry.cpp
         src/Windows/SystemInfoWin.cpp
         src/Windows/ThreadWin.cpp
+        src/Windows/HostOperationsWin.cpp
         src/Windows/WindowsUtils.cpp
     )
 elseif(PLATFORM_MACOS)
@@ -33,6 +34,7 @@ elseif(PLATFORM_MACOS)
         src/MacOS/NetworkMac.cpp
         src/MacOS/ProcessMac.cpp
         src/MacOS/SystemInfoMac.cpp
+        src/MacOS/HostOperationsMac.cpp
         src/MacOS/ThreadMac.cpp
     )
 elseif(PLATFORM_LINUX)
@@ -41,13 +43,16 @@ elseif(PLATFORM_LINUX)
         src/Linux/NetworkLinux.cpp
         src/Linux/ProcessLinux.cpp
         src/Linux/SystemInfoLinux.cpp
+        src/Linux/HostOperationsLinux.cpp
         src/Linux/ThreadLinux.cpp
     )
 endif()
 
 set(COMMON_SOURCES
+    src/JsonUtils.cpp
     src/Logger.cpp
     src/StringUtils.cpp
+    src/TimeUtils.cpp
 )
 
 # 源文件
@@ -57,12 +62,15 @@ set(SOURCES ${COMMON_SOURCES} ${PLATFORM_SOURCES})
 set(PUBLIC_HEADERS
     include/CorePlatform/Export.h
     include/CorePlatform/FileSystem.h
+    include/CorePlatform/HostOperations.h
+    include/CorePlatform/JsonUtils.h
     include/CorePlatform/Logger.h
     include/CorePlatform/StringUtils.h
     include/CorePlatform/Network.h
     include/CorePlatform/Process.h
     include/CorePlatform/SystemInfo.h
     include/CorePlatform/Thread.h
+    include/CorePlatform/TimeUtils.h
     include/CorePlatform/Internal/PlatformDetection.h
 )
 if(WIN32)
